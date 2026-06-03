@@ -74,9 +74,9 @@ function errorMessageFromBody(
         ? body
         : `Errore su ${fileName} (${status})`;
 
-  if (errMsg === "unauthorized" || status === 401) {
+  if (status === 401 && errMsg === "unauthorized") {
     errMsg =
-      "Token rifiutato (401). UPLOAD_API_KEY deve essere identica a TOKEN sul Raspberry.";
+      'Token rifiutato (401). Controlla UPLOAD_API_KEY e TOKEN sul Raspberry (dettagli non disponibili).';
   }
 
   if (

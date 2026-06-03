@@ -1,6 +1,7 @@
 import {
   getBearerAuthorizationValue,
   getMissingUploadKeyMessage,
+  getUploadApiKey,
   hasUploadApiKey,
 } from "@/lib/backend-auth";
 import { UPLOAD_FILE_FIELD } from "@/lib/upload-field";
@@ -52,7 +53,24 @@ export async function POST(request: Request) {
 
     const contentType = backendResponse.headers.get("content-type") ?? "";
     if (contentType.includes("application/json")) {
-      const data = await backendResponse.json();
+      const data = (await backendResponse.json()) as Record<string, unknown>;
+
+      if (backendResponse.status === 401) {
+        const uploadKey = getUploadApiKey() ?? "";
+        const piToken =
+          typeof data.expectedToken === "string"
+            ? data.expectedToken
+            : "(non ricevuto — nginx senza Authorization o server.js da aggiornare sul Pi)";
+        return Response.json(
+          {
+            error: formatTokenMismatchMessage(uploadKey, piToken),
+            uploadApiKey: uploadKey,
+            expectedToken: piToken,
+          },
+          { status: 401 }
+        );
+      }
+
       return Response.json(data, { status: backendResponse.status });
     }
 
@@ -66,4 +84,14 @@ export async function POST(request: Request) {
       error instanceof Error ? error.message : "Errore proxy upload";
     return Response.json({ error: message }, { status: 502 });
   }
+}
+
+function formatTokenMismatchMessage(
+  uploadApiKey: string,
+  raspberryToken: string
+): string {
+  return (
+    `Token rifiutato (401). UPLOAD_API_KEY che ha valore di: "${uploadApiKey}" ` +
+    `deve essere identica a TOKEN sul Raspberry che ha valore di: "${raspberryToken}".`
+  );
 }

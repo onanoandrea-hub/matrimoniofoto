@@ -28,7 +28,7 @@ if (!fs.existsSync(UPLOAD_DIR)) {
 function requireBearer(req, res, next) {
   const auth = req.headers.authorization || "";
   if (auth !== `Bearer ${TOKEN}`) {
-    return res.status(401).json({ error: "unauthorized" });
+    return res.status(401).json({ error: "unauthorized", expectedToken: TOKEN });
   }
   next();
 }
