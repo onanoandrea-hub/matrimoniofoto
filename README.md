@@ -147,12 +147,25 @@ git push -u origin main
 ## Deploy su Vercel
 
 1. Vai su [vercel.com](https://vercel.com) → **Add New Project**
-2. Importa il repository GitHub
-3. Framework: **Next.js** (rilevato automaticamente)
-4. Aggiungi la variabile `NEXT_PUBLIC_API_BASE_URL` = `http://fotoonano.duckdns.org`
-5. **Deploy**
+2. Importa [onanoandrea-hub/matrimoniofoto](https://github.com/onanoandrea-hub/matrimoniofoto)
+3. **Framework Preset: Next.js** (non “Other” e non sito statico)
+4. **Output Directory**: lascia **vuoto** (default). Non impostare `public` — quella cartella è solo per asset statici, non è l’output della build Next.js
+5. Variabili d’ambiente:
+   - `NEXT_PUBLIC_API_BASE_URL` = `http://fotoonano.duckdns.org`
+   - `UPLOAD_API_KEY` = stesso `TOKEN` del Raspberry
+6. **Deploy**
 
-Ogni push su `main` (o sul branch collegato) genera un deploy automatico.
+Il repo include `vercel.json` con `"framework": "nextjs"` per forzare il rilevamento corretto.
+
+### Errore “No Output Directory named public”
+
+Significa che in Vercel è impostato **Output Directory = public** (tipico dei siti statici). Per Next.js:
+
+- Settings → Build & Development → **Framework Preset** → **Next.js**
+- **Output Directory** → cancella `public` e lascia vuoto
+- Rideploy
+
+Ogni push su `main` genera un deploy automatico.
 
 ## Quando passare al backend HTTPS
 
