@@ -1,8 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const site = require("../site.config.js") as { title: string };
+
 export const metadata: Metadata = {
-  title: "Matrimonio Andrea e Francesca",
+  title: site.title,
   description:
     "Carica le foto del matrimonio di Andrea e Francesca — dal telefono in pochi secondi.",
 };
