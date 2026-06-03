@@ -1,6 +1,6 @@
+/** Solo testi da .env.example — non bloccare token reali sul Pi (anche se corti). */
 const PLACEHOLDER_KEYS = new Set([
   "",
-  "cambia-questo-token",
   "VALORE_DEL_TOKEN_RASPBERRY",
   "incolla-qui-la-chiave-del-raspberry",
   "incolla-qui-il-token-del-raspberry",
