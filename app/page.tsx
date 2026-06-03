@@ -5,11 +5,11 @@ export default function HomePage() {
     <main className="page">
       <article className="card">
         <header className="header">
-          <p className="eyebrow">Matrimonio</p>
-          <h1 className="title">Le tue foto, per noi</h1>
+          <p className="eyebrow">Condividi le tue foto</p>
+          <h1 className="title">Matrimonio Andrea e Francesca</h1>
           <p className="lead">
             Seleziona una o più immagini dalla galleria e inviale in pochi
-            secondi. Grazie per aver condiviso questo momento con noi.
+            secondi. Grazie per essere con noi in questo giorno speciale.
           </p>
         </header>
         <UploadForm />

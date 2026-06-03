@@ -2,9 +2,9 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Condividi le tue foto",
+  title: "Matrimonio Andrea e Francesca",
   description:
-    "Carica le foto del matrimonio — semplice, veloce, dal telefono.",
+    "Carica le foto del matrimonio di Andrea e Francesca — dal telefono in pochi secondi.",
 };
 
 export const viewport: Viewport = {

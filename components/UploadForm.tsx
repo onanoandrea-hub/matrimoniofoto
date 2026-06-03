@@ -16,8 +16,6 @@ function filesFromInput(input: HTMLInputElement | null): File[] {
 export function UploadForm() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<File[]>([]);
-  const [guestName, setGuestName] = useState("");
-  const [message, setMessage] = useState("");
   const [status, setStatus] = useState<UploadStatus>("idle");
   const [feedback, setFeedback] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
@@ -64,8 +62,6 @@ export function UploadForm() {
       try {
         const result = await uploadPhotos({
           files: filesToUpload,
-          guestName,
-          message,
           onProgress: (current, total) => {
             setUploadProgress(
               total > 1 ? `Invio foto ${current} di ${total}…` : null
@@ -77,8 +73,6 @@ export function UploadForm() {
           setStatus("success");
           setFeedback(result.message);
           clearSelection();
-          setGuestName("");
-          setMessage("");
         } else {
           setStatus("error");
           setFeedback(result.message);
@@ -91,7 +85,7 @@ export function UploadForm() {
         );
       }
     },
-    [guestName, message, clearSelection]
+    [clearSelection]
   );
 
   const isUploading = status === "uploading";
@@ -147,39 +141,6 @@ export function UploadForm() {
           </button>
         </div>
       )}
-
-      <div className="field optional">
-        <label htmlFor="guestName" className="field-label">
-          Nome e cognome <span className="optional-tag">(opzionale)</span>
-        </label>
-        <input
-          id="guestName"
-          name="guestName"
-          type="text"
-          autoComplete="name"
-          placeholder="Es. Marco Rossi"
-          className="text-input"
-          value={guestName}
-          onChange={(e) => setGuestName(e.target.value)}
-          disabled={isUploading}
-        />
-      </div>
-
-      <div className="field optional">
-        <label htmlFor="message" className="field-label">
-          Messaggio <span className="optional-tag">(opzionale)</span>
-        </label>
-        <textarea
-          id="message"
-          name="message"
-          rows={3}
-          placeholder="Un augurio per gli sposi…"
-          className="text-input"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          disabled={isUploading}
-        />
-      </div>
 
       <button
         type="submit"

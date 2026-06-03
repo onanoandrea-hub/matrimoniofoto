@@ -14,8 +14,6 @@ const UPLOAD_PROXY_URL = "/api/upload";
 
 type UploadOptions = {
   files: File[];
-  guestName?: string;
-  message?: string;
   onProgress?: (current: number, total: number) => void;
 };
 
@@ -38,20 +36,10 @@ async function cloneFilesForUpload(files: File[]): Promise<File[]> {
 }
 
 async function uploadSingleFile(
-  file: File,
-  meta: { guestName?: string; message?: string; includeMeta: boolean }
+  file: File
 ): Promise<{ ok: boolean; status: number; body: unknown }> {
   const formData = new FormData();
   formData.append(UPLOAD_FILE_FIELD, file);
-
-  if (meta.includeMeta) {
-    if (meta.guestName?.trim()) {
-      formData.append("name", meta.guestName.trim());
-    }
-    if (meta.message?.trim()) {
-      formData.append("message", meta.message.trim());
-    }
-  }
 
   const response = await fetch(UPLOAD_PROXY_URL, {
     method: "POST",
@@ -92,11 +80,8 @@ function errorMessageFromBody(
   return errMsg;
 }
 
-/**
- * Un POST per ogni foto (compatibile con multer.single sul backend).
- */
 export async function uploadPhotos(params: UploadOptions): Promise<UploadResult> {
-  const { files, guestName, message, onProgress } = params;
+  const { files, onProgress } = params;
 
   if (files.length === 0) {
     return { ok: false, message: "Seleziona almeno una foto." };
@@ -113,11 +98,7 @@ export async function uploadPhotos(params: UploadOptions): Promise<UploadResult>
       await new Promise((resolve) => setTimeout(resolve, 200));
     }
 
-    const result = await uploadSingleFile(cloned[i], {
-      guestName,
-      message,
-      includeMeta: i === 0,
-    });
+    const result = await uploadSingleFile(cloned[i]);
 
     if (!result.ok) {
       const errMsg = errorMessageFromBody(
