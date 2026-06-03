@@ -1,6 +1,11 @@
 # Foto Matrimonio — frontend Next.js
 
-Sito minimale per caricare foto degli invitati. Il frontend è pensato per **Vercel (HTTPS)**; le chiamate al backend Raspberry (**HTTP**) passano da **route API Next.js** (`/api/upload`, `/api/health`) per evitare il blocco *mixed content* del browser.
+Sito minimale per caricare foto degli invitati.
+
+- **Vercel:** frontend HTTPS + proxy `/api/upload` (limite ~4,5 MB per foto → compressione automatica).
+- **Tutto sul Raspberry:** guida completa → **[RASPBERRY-FULL-DEPLOY.md](./RASPBERRY-FULL-DEPLOY.md)** (niente limite Vercel).
+
+In entrambi i casi le chiamate al backend passano da **route API Next.js** (`/api/upload`, `/api/health`) salvo configurazione nginx avanzata.
 
 ## Architettura
 
