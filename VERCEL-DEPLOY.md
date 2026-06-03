@@ -30,7 +30,25 @@ Il file `.env.local` **non** va su GitHub. Su Vercel vanno create a mano:
 
 Dopo ogni modifica alle variabili: **Deployments → Redeploy**.
 
-Se vedi `UPLOAD_API_KEY non configurata` in produzione, manca quasi sempre questa variabile su Vercel (non in `.env.local`).
+**Importante:** spunta **Production** e **Preview** (non solo *Development* — quello vale solo per `vercel dev` in cloud).
+
+### Verifica dopo il deploy
+
+Apri nel browser (sostituisci con il tuo dominio):
+
+`https://TUO-DOMINIO.vercel.app/api/config-status`
+
+Risposta attesa se è tutto ok:
+
+```json
+"uploadApiKey": { "ok": true, "length": 12, "uploadEnvDefined": true }
+```
+
+Se `ok: false` e `uploadEnvDefined: false`, la variabile **non è collegata** a questo deploy (nome sbagliato, ambiente sbagliato, o progetto Vercel diverso dal repo).
+
+Se `problem: "placeholder"`, hai ancora il testo da `.env.example` — metti il TOKEN reale del Pi.
+
+Se vedi l’errore upload ma `config-status` dice `ok: true`, il problema è altrove (401 sul Pi, NGINX, ecc.).
 
 ## Se l'errore resta
 
