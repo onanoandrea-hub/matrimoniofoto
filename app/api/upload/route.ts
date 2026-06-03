@@ -1,3 +1,4 @@
+import { getBackendBaseUrl } from "@/lib/api";
 import {
   getBearerAuthorizationValue,
   getMissingUploadKeyMessage,
@@ -13,12 +14,13 @@ export async function POST(request: Request) {
     return Response.json({ error: getMissingUploadKeyMessage() }, { status: 500 });
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "");
-  if (!baseUrl) {
-    return Response.json(
-      { error: "NEXT_PUBLIC_API_BASE_URL non configurata." },
-      { status: 500 }
-    );
+  let baseUrl: string;
+  try {
+    baseUrl = getBackendBaseUrl();
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Backend URL non configurata.";
+    return Response.json({ error: message }, { status: 500 });
   }
 
   const authorization = getBearerAuthorizationValue();
@@ -60,7 +62,7 @@ export async function POST(request: Request) {
         const piToken =
           typeof data.expectedToken === "string"
             ? data.expectedToken
-            : "(non ricevuto — nginx senza Authorization o server.js da aggiornare sul Pi)";
+            : "(non ricevuto — aggiorna upload-server.js sul Pi e riavvia npm run start:upload)";
         return Response.json(
           {
             error: formatTokenMismatchMessage(uploadKey, piToken),

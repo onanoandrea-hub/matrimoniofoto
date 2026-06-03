@@ -1,191 +1,105 @@
-# Tutto sul Raspberry (sito + upload)
+# Deploy sul Raspberry (una sola cartella)
 
-Guida per **non usare Vercel**: Next.js e Express girano sul Pi dietro **nginx + HTTPS**.  
-Niente limite 4,5 MB di Vercel; restano solo i limiti che imposti tu (multer, nginx, disco, rete).
+Tutto il progetto vive in **un’unica directory**. Due processi Node dalla stessa root:
 
-## Architettura
+| Comando | Cosa | Porta |
+|---------|------|-------|
+| `npm run start:upload` | API upload (`upload-server.js`) | **3001** |
+| `npm run build` + `npm run start` | Sito Next.js | **3000** |
 
-```
-Browser (HTTPS)
-    → nginx :443
-        → Next.js :3000  (pagina + /api/upload proxy)
-            → Express :3001  (/upload, /health)
-```
-
-Il browser vede un solo dominio (`https://matrimonioandreafrancesca.duckdns.org`).  
-Il proxy `/api/upload` gira **sul Pi**, non su Vercel → upload fino a `MAX_FILE_MB` (default 25 MB/foto).
+nginx (HTTPS) inoltra il traffico solo a Next (:3000). Next parla con l’upload API su **127.0.0.1:3001** (nessun problema nginx / Authorization).
 
 ---
 
-## 0. Cosa ti serve
-
-- Raspberry con **Raspberry Pi OS** (o Debian)
-- **Node.js 20+** sul Pi
-- Dominio **DuckDNS** già puntato al Pi
-- **nginx** installato
-- Porte **80** e **443** inoltrate dal router al Pi
-- Spazio disco per le foto (consigliato **32+ GB** liberi il giorno dell’evento)
-
----
-
-## 1. HTTPS (obbligatorio)
-
-Senza HTTPS i telefoni possono bloccare il sito o le API.
-
-```bash
-sudo apt update
-sudo apt install -y nginx certbot python3-certbot-nginx
-sudo certbot --nginx -d matrimonioandreafrancesca.duckdns.org
-```
-
-Segui il wizard. Certbot configura nginx per HTTPS.
-
----
-
-## 2. Backend Express (porta 3001)
-
-### 2.1 Cartelle sul Pi
-
-Esempio (adatta i path):
+## 1. Preparazione sul Pi
 
 ```bash
 mkdir -p ~/fotomatrimonio
 cd ~/fotomatrimonio
+git clone https://github.com/onanoandrea-hub/matrimoniofoto.git .
+npm install
 ```
 
-Copia sul Pi la cartella `backend/` del repo (git clone o `scp`):
+Copia le variabili:
 
 ```bash
-# dal PC, esempio:
-scp -r backend/ pi@IP_DEL_PI:~/fotomatrimonio/backend/
+cp .env.example .env.local
+nano .env.local
 ```
 
-### 2.2 File `.env` del backend
-
-`~/fotomatrimonio/backend/.env`:
+Esempio `.env.local`:
 
 ```env
-PORT=3001
+UPLOAD_API_KEY=cambia-questo-token
 TOKEN=cambia-questo-token
-UPLOAD_DIR=/home/pi/fotomatrimonio/uploads
-MAX_FILES=50
+UPLOAD_PORT=3001
+UPLOAD_DIR=/home/andrea/fotomatrimonio/uploads
 MAX_FILE_MB=25
 ```
 
-Crea la cartella upload:
-
-```bash
-mkdir -p /home/pi/fotomatrimonio/uploads
-```
-
-### 2.3 Installazione e test
-
-```bash
-cd ~/fotomatrimonio/backend
-npm install
-node server.js
-```
-
-In un altro terminale:
-
-```bash
-curl -s http://127.0.0.1:3001/health
-curl -s -X POST http://127.0.0.1:3001/upload \
-  -H "Authorization: Bearer cambia-questo-token" \
-  -F "files=@/percorso/foto.jpg"
-```
-
-Se OK, ferma con Ctrl+C e passa al servizio systemd (sezione 5).
+`UPLOAD_API_KEY` e `TOKEN` devono essere **identici**.
 
 ---
 
-## 3. Frontend Next.js (porta 3000)
+## 2. Test manuale
 
-### 3.1 Codice sul Pi
+Terminale 1:
 
 ```bash
 cd ~/fotomatrimonio
-git clone https://github.com/onanoandrea-hub/matrimoniofoto.git sito
-cd sito
+npm run start:upload
 ```
 
-Oppure copia l’intero progetto da PC con `scp` / `rsync`.
-
-### 3.2 `.env.local` sul Pi
-
-`~/fotomatrimonio/sito/.env.local`:
-
-```env
-NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:3001
-UPLOAD_API_KEY=cambia-questo-token
-```
-
-- `UPLOAD_API_KEY` = **stesso** `TOKEN` del backend  
-- `127.0.0.1:3001` perché il proxy Next parla al Express **in locale** (non esce da internet)
-
-### 3.3 Build e avvio
-
-Sul Pi (la build può richiedere diversi minuti):
+Terminale 2:
 
 ```bash
-cd ~/fotomatrimonio/sito
-npm install
+cd ~/fotomatrimonio
 npm run build
 npm run start
 ```
 
-Prova: `curl -s http://127.0.0.1:3000/api/health`
-
-**Alternativa:** fai `npm run build` sul PC Windows e copia solo `.next`, `package.json`, `node_modules` (più veloce sul Pi vecchio).
-
----
-
-## 4. nginx — un solo dominio
-
-Modifica il sito creato da certbot, es.  
-`/etc/nginx/sites-available/matrimonioandreafrancesca` (nome esempio).
-
-```nginx
-server {
-    listen 443 ssl;
-    server_name matrimonioandreafrancesca.duckdns.org;
-
-    # certbot ha già aggiunto ssl_certificate ...
-
-    # Upload grandi (allinea a MAX_FILE_MB nel .env del backend)
-    client_max_body_size 30m;
-
-    location / {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-
-server {
-    listen 80;
-    server_name matrimonioandreafrancesca.duckdns.org;
-    return 301 https://$host$request_uri;
-}
-```
-
-Test e reload:
+Verifica:
 
 ```bash
-sudo nginx -t
-sudo systemctl reload nginx
+curl -s http://127.0.0.1:3001/health
+curl -s http://127.0.0.1:3000/api/health
 ```
-
-Apri da telefono: **https://matrimonioandreafrancesca.duckdns.org**
 
 ---
 
-## 5. Servizi che ripartono al boot (systemd)
+## 3. HTTPS con nginx
 
-### Backend — `/etc/systemd/system/foto-upload.service`
+```bash
+sudo apt install -y nginx certbot python3-certbot-nginx
+sudo certbot --nginx -d matrimonioandreafrancesca.duckdns.org
+```
+
+Nel sito nginx (443):
+
+```nginx
+client_max_body_size 100m;
+
+location / {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 600s;
+    proxy_send_timeout 600s;
+}
+```
+
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+---
+
+## 4. systemd (avvio automatico)
+
+### Upload API — `/etc/systemd/system/foto-upload.service`
 
 ```ini
 [Unit]
@@ -194,10 +108,10 @@ After=network.target
 
 [Service]
 Type=simple
-User=pi
-WorkingDirectory=/home/pi/fotomatrimonio/backend
+User=andrea
+WorkingDirectory=/home/andrea/fotomatrimonio
 Environment=NODE_ENV=production
-ExecStart=/usr/bin/node server.js
+ExecStart=/usr/bin/npm run start:upload
 Restart=on-failure
 RestartSec=5
 
@@ -205,7 +119,7 @@ RestartSec=5
 WantedBy=multi-user.target
 ```
 
-### Frontend — `/etc/systemd/system/foto-sito.service`
+### Sito Next — `/etc/systemd/system/foto-sito.service`
 
 ```ini
 [Unit]
@@ -215,8 +129,8 @@ Requires=foto-upload.service
 
 [Service]
 Type=simple
-User=pi
-WorkingDirectory=/home/pi/fotomatrimonio/sito
+User=andrea
+WorkingDirectory=/home/andrea/fotomatrimonio
 Environment=NODE_ENV=production
 Environment=PORT=3000
 ExecStart=/usr/bin/npm run start
@@ -227,8 +141,6 @@ RestartSec=10
 WantedBy=multi-user.target
 ```
 
-Attiva:
-
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable foto-upload foto-sito
@@ -236,76 +148,29 @@ sudo systemctl start foto-upload foto-sito
 sudo systemctl status foto-upload foto-sito
 ```
 
-Log:
-
-```bash
-journalctl -u foto-upload -f
-journalctl -u foto-sito -f
-```
+Log: `journalctl -u foto-upload -f` / `journalctl -u foto-sito -f`
 
 ---
 
-## 6. Limiti che puoi alzare
-
-| Dove | Cosa |
-|------|------|
-| `backend/.env` | `MAX_FILE_MB=50` (esempio) |
-| nginx | `client_max_body_size 55m;` (≥ MAX_FILE_MB) |
-| Disco | `df -h` sulla cartella `UPLOAD_DIR` |
-
-Non serve più la compressione aggressiva per Vercel; puoi lasciarla per risparmiare banda upload di casa.
-
----
-
-## 7. Aggiornare il sito dopo modifiche Git
+## 5. Aggiornamenti
 
 ```bash
-cd ~/fotomatrimonio/sito
+cd ~/fotomatrimonio
 git pull
 npm install
 npm run build
-sudo systemctl restart foto-sito
-```
-
-Backend:
-
-```bash
-cd ~/fotomatrimonio/backend
-# copia nuovo server.js se cambiato
-sudo systemctl restart foto-upload
+sudo systemctl restart foto-upload foto-sito
 ```
 
 ---
 
-## 8. Vercel
+## 6. Problemi frequenti
 
-Puoi **disattivare** il progetto su Vercel o lasciare il dominio solo sul Pi.  
-Gli invitati useranno solo `https://matrimonioandreafrancesca.duckdns.org`.
+| Sintomo | Soluzione |
+|---------|-----------|
+| `Cannot find module .../server.js` | Usa **`npm run start:upload`**, non `node server.js` |
+| 502 Bad Gateway | `systemctl status foto-sito foto-upload` — Next o upload non in esecuzione |
+| 401 token uguale | Riavvia entrambi i servizi; controlla `.env.local` (TOKEN = UPLOAD_API_KEY) |
+| 413 | Aumenta `client_max_body_size` in nginx |
 
----
-
-## 9. Checklist giorno matrimonio
-
-- [ ] `systemctl status foto-upload foto-sito nginx` tutti **active**
-- [ ] Test upload da **4G** (non solo Wi‑Fi di casa)
-- [ ] `df -h` — spazio disco sufficiente
-- [ ] Token non è un placeholder se hai abilitato controlli nel codice
-- [ ] Router: porte 80/443 inoltrate al Pi
-
----
-
-## 10. Problemi frequenti
-
-| Sintomo | Causa probabile |
-|---------|------------------|
-| 502 Bad Gateway | Next o Express non in ascolto → `systemctl status` |
-| 413 Request Entity Too Large | `client_max_body_size` nginx troppo basso |
-| 401 unauthorized | `TOKEN` ≠ `UPLOAD_API_KEY` o header non arriva |
-| `file_too_large` | `MAX_FILE_MB` multer |
-| Sito lento | Troppi upload in parallelo + upload ADSL limitato |
-
----
-
-## Variante avanzata (opzionale)
-
-nginx può mandare **`/upload` diretto a Express** (porta 3001) e il resto a Next, con upload dal browser senza proxy. Richiede piccole modifiche al frontend (`lib/upload-client.ts`). La guida sopra è la via **più semplice** senza cambiare codice.
+Diagnostica: `https://tuodominio/api/config-status` e `http://localhost:3000/api/auth-check` (solo dev).

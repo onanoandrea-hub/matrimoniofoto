@@ -66,6 +66,15 @@ Il file `.nvmrc` nel progetto indica la versione consigliata (`20`).
 cd fotoMatrimonioSito
 npm install
 cp .env.example .env.local
+```
+
+Due terminali (stessa cartella):
+
+```bash
+# Terminale 1 — API upload (porta 3001)
+npm run start:upload
+
+# Terminale 2 — sito Next (porta 3000)
 npm run dev
 ```
 
@@ -77,8 +86,11 @@ Verifica proxy health: [http://localhost:3000/api/health](http://localhost:3000/
 
 | Variabile | Dove | Descrizione |
 |-----------|------|-------------|
-| `NEXT_PUBLIC_API_BASE_URL` | `.env.local` / Vercel | URL base backend, es. `http://matrimonioandreafrancesca.duckdns.org` |
-| `UPLOAD_API_KEY` | `.env.local` / Vercel | **Obbligatoria** — stesso valore di `TOKEN` in `server.js` sul Pi; **mai** `NEXT_PUBLIC_` |
+| `UPLOAD_API_KEY` | `.env.local` | Stesso valore di `TOKEN`; usato dal proxy Next |
+| `TOKEN` | `.env.local` | Stesso valore di `UPLOAD_API_KEY`; usato da `upload-server.js` |
+| `UPLOAD_PORT` | `.env.local` | Porta API upload (default **3001**) |
+| `UPLOAD_DIR` | `.env.local` | Cartella foto sul disco (default `./uploads`) |
+| `NEXT_PUBLIC_API_BASE_URL` | `.env.local` / Vercel | Su Vercel: URL del Pi. Sul Pi: opzionale (proxy usa `127.0.0.1:UPLOAD_PORT`) |
 
 Il proxy invia esattamente: `Authorization: Bearer <UPLOAD_API_KEY>` (come richiesto da Express: `auth !== \`Bearer ${TOKEN}\``).
 
@@ -134,9 +146,9 @@ Il proxy inoltra tutti i campi ricevuti. Il frontend invia:
 - `name` — opzionale
 - `message` — opzionale
 
-### Backend Raspberry (multer multi-file)
+### Backend upload (Express)
 
-Il codice Express aggiornato è in `backend/server.js`. Sul Pi deve usare `upload.fields([{ name: "files" }, { name: "photos" }])` e leggere tutti i file con `normalizeUploadedFiles(req)`, **non** solo `req.file`. Vedi `backend/PATCH-upload.md`.
+Il file è **`upload-server.js`** nella root del repo. Avvio: `npm run start:upload`.
 
 ## Push su GitHub
 

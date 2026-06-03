@@ -1,12 +1,10 @@
 /**
- * Server upload foto matrimonio — da copiare sul Raspberry
- * (es. /home/andrea/Desktop/fotomatrimonio/server.js)
- *
- * Campo multipart atteso dal client Next: "files" (default) o "photos"
- * — usa upload.fields() + normalizzazione req.file / req.files
+ * API upload foto (Express + multer) — stessa root del sito Next.
+ * Avvio: npm run start:upload  (porta UPLOAD_PORT, default 3001)
  */
 
 require("dotenv").config();
+require("dotenv").config({ path: ".env.local", override: true });
 
 const express = require("express");
 const multer = require("multer");
@@ -14,7 +12,7 @@ const path = require("path");
 const fs = require("fs");
 
 const app = express();
-const PORT = Number(process.env.PORT) || 3001;
+const UPLOAD_PORT = Number(process.env.UPLOAD_PORT) || 3001;
 const TOKEN = process.env.TOKEN || process.env.UPLOAD_API_KEY || "";
 const UPLOAD_DIR =
   process.env.UPLOAD_DIR || path.join(__dirname, "uploads");
@@ -36,10 +34,7 @@ function requireBearer(req, res, next) {
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
   filename: (_req, file, cb) => {
-    const safe = (file.originalname || "foto.jpg").replace(
-      /[^\w.\-]+/g,
-      "_"
-    );
+    const safe = (file.originalname || "foto.jpg").replace(/[^\w.\-]+/g, "_");
     cb(null, `${Date.now()}-${safe}`);
   },
 });
@@ -49,16 +44,11 @@ const upload = multer({
   limits: { fileSize: MAX_FILE_MB * 1024 * 1024 },
 });
 
-/** Accetta più file su "photos" e/o "files" (allineato al frontend Next). */
 const uploadMany = upload.fields([
   { name: "photos", maxCount: MAX_FILES },
   { name: "files", maxCount: MAX_FILES },
 ]);
 
-/**
- * Unifica req.file (single) e req.files (array o object da .fields/.array)
- * in un unico array di file caricati.
- */
 function normalizeUploadedFiles(req) {
   const list = [];
 
@@ -101,11 +91,6 @@ app.post("/upload", requireBearer, uploadMany, (req, res) => {
     return res.status(400).json({ error: "no_file" });
   }
 
-  const guestName =
-    typeof req.body?.name === "string" ? req.body.name.trim() : "";
-  const guestMessage =
-    typeof req.body?.message === "string" ? req.body.message.trim() : "";
-
   const saved = uploaded.map((f) => ({
     field: f.fieldname,
     originalName: f.originalname,
@@ -115,7 +100,7 @@ app.post("/upload", requireBearer, uploadMany, (req, res) => {
   }));
 
   console.log(
-    `[upload] ${saved.length} file da ${guestName || "anonimo"}`,
+    `[upload] ${saved.length} file`,
     saved.map((s) => s.savedAs).join(", ")
   );
 
@@ -123,8 +108,6 @@ app.post("/upload", requireBearer, uploadMany, (req, res) => {
     ok: true,
     count: saved.length,
     files: saved,
-    name: guestName || undefined,
-    message: guestMessage || undefined,
     messageText:
       saved.length === 1
         ? "1 foto caricata con successo."
@@ -132,7 +115,7 @@ app.post("/upload", requireBearer, uploadMany, (req, res) => {
   });
 });
 
-app.use((err, req, res, _next) => {
+app.use((err, _req, res, _next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === "LIMIT_FILE_SIZE") {
       return res.status(400).json({ error: "file_too_large" });
@@ -146,7 +129,7 @@ app.use((err, req, res, _next) => {
   res.status(500).json({ error: "server_error" });
 });
 
-app.listen(PORT, () => {
-  console.log(`Upload server http://127.0.0.1:${PORT}`);
+app.listen(UPLOAD_PORT, () => {
+  console.log(`Upload API http://127.0.0.1:${UPLOAD_PORT}`);
   console.log(`Cartella upload: ${UPLOAD_DIR}`);
 });

@@ -21,6 +21,12 @@
 # misc
 .DS_Store
 *.pem
+/uploads
+
+# env (segreti)
+.env
+.env.local
+.env*.local
 
 # debug
 npm-debug.log*

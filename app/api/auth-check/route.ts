@@ -1,3 +1,4 @@
+import { getBackendBaseUrl } from "@/lib/api";
 import { getBearerAuthorizationValue, getUploadApiKey, hasUploadApiKey } from "@/lib/backend-auth";
 import { UPLOAD_FILE_FIELD } from "@/lib/upload-field";
 
@@ -13,7 +14,13 @@ export async function GET() {
   const rawUploadApiKey = process.env.UPLOAD_API_KEY?.trim() ?? null;
   const rawTokenEnv = process.env.TOKEN?.trim() ?? null;
   const authorization = getBearerAuthorizationValue();
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "");
+
+  let baseUrl: string | null = null;
+  try {
+    baseUrl = getBackendBaseUrl();
+  } catch {
+    baseUrl = null;
+  }
 
   let backendStatus: number | null = null;
   let backendBody: unknown = null;
@@ -47,19 +54,15 @@ export async function GET() {
   return Response.json({
     keyConfigured: hasUploadApiKey(),
     keyLength: key?.length ?? 0,
-    /** Solo in dev locale — mai in produzione */
     uploadApiKey: rawUploadApiKey,
-    tokenEnvOnNext: rawTokenEnv,
+    tokenEnv: rawTokenEnv,
     authorizationSent: authorization,
-    authorizationFormat: authorization
-      ? `Bearer ${"*".repeat(Math.max(0, (key?.length ?? 0) - 4))}${key?.slice(-4) ?? ""}`
-      : null,
     backendUrl: baseUrl ? `${baseUrl}/upload` : null,
     backendStatus,
     backendBody,
     hint401:
       backendStatus === 401
-        ? "Next invia il Bearer sopra. Sul Pi TOKEN nel backend/.env deve essere identico. Se usi DuckDNS, nginx spesso non inoltra Authorization → prova NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:3001 sul Pi o curl diretto a :3001."
+        ? "Avvia npm run start:upload e verifica TOKEN = UPLOAD_API_KEY in .env.local"
         : null,
   });
 }
