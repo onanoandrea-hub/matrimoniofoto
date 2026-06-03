@@ -17,12 +17,20 @@ Questo progetto è **Next.js** (con API `/api/upload`).
 7. **Root Directory** → vuoto (root del repo)
 8. **Deployments** → ultimo deploy → **⋯** → **Redeploy**
 
-## Variabili d'ambiente
+## Variabili d'ambiente (obbligatorie)
 
-| Nome | Valore |
-|------|--------|
-| `NEXT_PUBLIC_API_BASE_URL` | `http://fotoonano.duckdns.org` |
-| `UPLOAD_API_KEY` | stesso `TOKEN` del Raspberry |
+Il file `.env.local` **non** va su GitHub. Su Vercel vanno create a mano:
+
+**Project → Settings → Environment Variables → Add**
+
+| Nome | Valore | Ambiente |
+|------|--------|----------|
+| `NEXT_PUBLIC_API_BASE_URL` | `http://fotoonano.duckdns.org` | Production, Preview, Development |
+| `UPLOAD_API_KEY` | **stesso `TOKEN`** del file `.env` sul Raspberry | Production, Preview, Development |
+
+Dopo ogni modifica alle variabili: **Deployments → Redeploy**.
+
+Se vedi `UPLOAD_API_KEY non configurata` in produzione, manca quasi sempre questa variabile su Vercel (non in `.env.local`).
 
 ## Se l'errore resta
 

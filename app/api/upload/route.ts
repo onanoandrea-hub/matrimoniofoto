@@ -1,17 +1,15 @@
-import { getBearerAuthorizationValue, hasUploadApiKey } from "@/lib/backend-auth";
+import {
+  getBearerAuthorizationValue,
+  getMissingUploadKeyMessage,
+  hasUploadApiKey,
+} from "@/lib/backend-auth";
 import { UPLOAD_FILE_FIELD } from "@/lib/upload-field";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   if (!hasUploadApiKey()) {
-    return Response.json(
-      {
-        error:
-          "UPLOAD_API_KEY non configurata. Aggiungila in .env.local e riavvia npm run dev.",
-      },
-      { status: 500 }
-    );
+    return Response.json({ error: getMissingUploadKeyMessage() }, { status: 500 });
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "");
