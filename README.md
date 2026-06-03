@@ -13,7 +13,7 @@ In entrambi i casi le chiamate al backend passano da **route API Next.js** (`/ap
 Browser (HTTPS, Vercel)
     → POST /api/upload  (stesso dominio)
         → Route Handler Next.js (server)
-            → POST http://fotoonano.duckdns.org/upload
+            → POST http://matrimonioandreafrancesca.duckdns.org/upload
 ```
 
 In sviluppo locale il flusso è identico: il browser parla sempre con `/api/upload`.  
@@ -77,7 +77,7 @@ Verifica proxy health: [http://localhost:3000/api/health](http://localhost:3000/
 
 | Variabile | Dove | Descrizione |
 |-----------|------|-------------|
-| `NEXT_PUBLIC_API_BASE_URL` | `.env.local` / Vercel | URL base backend, es. `http://fotoonano.duckdns.org` |
+| `NEXT_PUBLIC_API_BASE_URL` | `.env.local` / Vercel | URL base backend, es. `http://matrimonioandreafrancesca.duckdns.org` |
 | `UPLOAD_API_KEY` | `.env.local` / Vercel | **Obbligatoria** — stesso valore di `TOKEN` in `server.js` sul Pi; **mai** `NEXT_PUBLIC_` |
 
 Il proxy invia esattamente: `Authorization: Bearer <UPLOAD_API_KEY>` (come richiesto da Express: `auth !== \`Bearer ${TOKEN}\``).
@@ -109,7 +109,7 @@ Il proxy invia già `Authorization: Bearer <UPLOAD_API_KEY>`. Se vedi ancora 401
      -F "files=@/percorso/foto.jpg"
 
    # tramite DuckDNS (come fa Next/Vercel)
-   curl -s -X POST http://fotoonano.duckdns.org/upload \
+   curl -s -X POST http://matrimonioandreafrancesca.duckdns.org/upload \
      -H "Authorization: Bearer IL_TUO_TOKEN" \
      -F "files=@/percorso/foto.jpg"
    ```
@@ -156,7 +156,7 @@ git push -u origin main
 3. **Framework Preset: Next.js** (non “Other” e non sito statico)
 4. **Output Directory**: lascia **vuoto** (default). Non impostare `public` — quella cartella è solo per asset statici, non è l’output della build Next.js
 5. Variabili d’ambiente:
-   - `NEXT_PUBLIC_API_BASE_URL` = `http://fotoonano.duckdns.org`
+   - `NEXT_PUBLIC_API_BASE_URL` = `http://matrimonioandreafrancesca.duckdns.org`
    - `UPLOAD_API_KEY` = stesso `TOKEN` del Raspberry
 6. **Deploy**
 
@@ -174,7 +174,7 @@ Ogni push su `main` genera un deploy automatico.
 
 ## Quando passare al backend HTTPS
 
-Quando configurerai TLS su DuckDNS / NGINX (`https://fotoonano.duckdns.org`), potrai:
+Quando configurerai TLS su DuckDNS / NGINX (`https://matrimonioandreafrancesca.duckdns.org`), potrai:
 
 - aggiornare `NEXT_PUBLIC_API_BASE_URL` con `https://...`
 - oppure continuare a usare il proxy (consigliato: nasconde l’URL del Raspberry e evita CORS)

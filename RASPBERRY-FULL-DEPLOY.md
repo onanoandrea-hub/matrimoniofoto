@@ -12,7 +12,7 @@ Browser (HTTPS)
             → Express :3001  (/upload, /health)
 ```
 
-Il browser vede un solo dominio (`https://fotoonano.duckdns.org`).  
+Il browser vede un solo dominio (`https://matrimonioandreafrancesca.duckdns.org`).  
 Il proxy `/api/upload` gira **sul Pi**, non su Vercel → upload fino a `MAX_FILE_MB` (default 25 MB/foto).
 
 ---
@@ -35,7 +35,7 @@ Senza HTTPS i telefoni possono bloccare il sito o le API.
 ```bash
 sudo apt update
 sudo apt install -y nginx certbot python3-certbot-nginx
-sudo certbot --nginx -d fotoonano.duckdns.org
+sudo certbot --nginx -d matrimonioandreafrancesca.duckdns.org
 ```
 
 Segui il wizard. Certbot configura nginx per HTTPS.
@@ -143,12 +143,12 @@ Prova: `curl -s http://127.0.0.1:3000/api/health`
 ## 4. nginx — un solo dominio
 
 Modifica il sito creato da certbot, es.  
-`/etc/nginx/sites-available/fotoonano` (nome esempio).
+`/etc/nginx/sites-available/matrimonioandreafrancesca` (nome esempio).
 
 ```nginx
 server {
     listen 443 ssl;
-    server_name fotoonano.duckdns.org;
+    server_name matrimonioandreafrancesca.duckdns.org;
 
     # certbot ha già aggiunto ssl_certificate ...
 
@@ -167,7 +167,7 @@ server {
 
 server {
     listen 80;
-    server_name fotoonano.duckdns.org;
+    server_name matrimonioandreafrancesca.duckdns.org;
     return 301 https://$host$request_uri;
 }
 ```
@@ -179,7 +179,7 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-Apri da telefono: **https://fotoonano.duckdns.org**
+Apri da telefono: **https://matrimonioandreafrancesca.duckdns.org**
 
 ---
 
@@ -280,7 +280,7 @@ sudo systemctl restart foto-upload
 ## 8. Vercel
 
 Puoi **disattivare** il progetto su Vercel o lasciare il dominio solo sul Pi.  
-Gli invitati useranno solo `https://fotoonano.duckdns.org`.
+Gli invitati useranno solo `https://matrimonioandreafrancesca.duckdns.org`.
 
 ---
 

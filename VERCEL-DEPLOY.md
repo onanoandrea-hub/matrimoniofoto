@@ -25,7 +25,7 @@ Il file `.env.local` **non** va su GitHub. Su Vercel vanno create a mano:
 
 | Nome | Valore | Ambiente |
 |------|--------|----------|
-| `NEXT_PUBLIC_API_BASE_URL` | `http://fotoonano.duckdns.org` | Production, Preview, Development |
+| `NEXT_PUBLIC_API_BASE_URL` | `http://matrimonioandreafrancesca.duckdns.org` | Production, Preview, Development |
 | `UPLOAD_API_KEY` | **identico** a `TOKEN` nel `.env` del Raspberry (anche se è `cambia-questo-token`) | Production, Preview, Development |
 
 Dopo ogni modifica alle variabili: **Deployments → Redeploy**.
