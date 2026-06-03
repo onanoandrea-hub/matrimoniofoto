@@ -159,11 +159,11 @@ Il repo include `vercel.json` con `"framework": "nextjs"` per forzare il rilevam
 
 ### Errore “No Output Directory named public”
 
-Significa che in Vercel è impostato **Output Directory = public** (tipico dei siti statici). Per Next.js:
+Vercel sta trattando il progetto come **sito statico** (output `public`). Per Next.js l’**Output Directory deve essere vuota**.
 
-- Settings → Build & Development → **Framework Preset** → **Next.js**
-- **Output Directory** → cancella `public` e lascia vuoto
-- Rideploy
+Guida passo-passo: **[VERCEL-DEPLOY.md](./VERCEL-DEPLOY.md)**
+
+In sintesi: Settings → Build and Deployment → Framework **Next.js** → **rimuovi** `public` da Output Directory → Redeploy.
 
 Ogni push su `main` genera un deploy automatico.
 
