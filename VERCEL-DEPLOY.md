@@ -50,6 +50,14 @@ Se `problem: "placeholder"`, hai ancora il testo da `.env.example` — metti il 
 
 Se vedi l’errore upload ma `config-status` dice `ok: true`, il problema è altrove (401 sul Pi, NGINX, ecc.).
 
+## Errore `PAYLOAD_TOO_LARGE` / 413
+
+Vercel accetta al massimo **~4,5 MB** per richiesta alla Function `/api/upload` (non si può alzare).
+
+Il sito **comprime automaticamente** le foto grandi prima dell’invio. Se l’errore resta, usa immagini più piccole o qualità media dalla fotocamera.
+
+Soluzione definitiva (opzionale): **HTTPS** sul Raspberry e upload diretto al Pi senza passare da Vercel.
+
 ## Se l'errore resta
 
 1. **Elimina** il progetto su Vercel

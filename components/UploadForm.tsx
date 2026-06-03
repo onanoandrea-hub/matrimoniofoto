@@ -98,7 +98,8 @@ export function UploadForm() {
           Le tue foto
         </label>
         <p className="field-hint">
-          Puoi selezionare più immagini dalla galleria del telefono.
+          Puoi selezionare più immagini dalla galleria del telefono. Le foto
+          grandi vengono ridotte automaticamente per l’invio.
         </p>
         <input
           ref={inputRef}

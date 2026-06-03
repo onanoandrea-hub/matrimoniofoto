@@ -1,5 +1,6 @@
 "use client";
 
+import { prepareFileForProxyUpload } from "./compress-image";
 import { UPLOAD_FILE_FIELD } from "./upload-field";
 
 export type UploadStatus = "idle" | "uploading" | "success" | "error";
@@ -77,6 +78,15 @@ function errorMessageFromBody(
     errMsg =
       "Token rifiutato (401). UPLOAD_API_KEY deve essere identica a TOKEN sul Raspberry.";
   }
+
+  if (
+    status === 413 ||
+    /payload_too_large|entity too large/i.test(errMsg)
+  ) {
+    errMsg =
+      "Foto troppo pesante per il server Vercel (max ~4,5 MB). Riprova: le immagini vengono compresse automaticamente; se persiste, usa foto più piccole.";
+  }
+
   return errMsg;
 }
 
@@ -98,7 +108,20 @@ export async function uploadPhotos(params: UploadOptions): Promise<UploadResult>
       await new Promise((resolve) => setTimeout(resolve, 200));
     }
 
-    const result = await uploadSingleFile(cloned[i]);
+    let fileToSend: File;
+    try {
+      fileToSend = await prepareFileForProxyUpload(cloned[i]);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Impossibile preparare la foto per l'invio.";
+      const partial =
+        uploaded > 0 ? ` (${uploaded} di ${total} già inviate)` : "";
+      return { ok: false, message: `${message}${partial}` };
+    }
+
+    const result = await uploadSingleFile(fileToSend);
 
     if (!result.ok) {
       const errMsg = errorMessageFromBody(
