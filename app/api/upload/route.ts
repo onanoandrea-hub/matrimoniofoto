@@ -11,7 +11,17 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   if (!hasUploadApiKey()) {
-    return Response.json({ error: getMissingUploadKeyMessage() }, { status: 500 });
+    return Response.json(
+      {
+        error: getMissingUploadKeyMessage(),
+        envPresent: {
+          UPLOAD_API_KEY: Boolean(process.env.UPLOAD_API_KEY?.trim()),
+          TOKEN: Boolean(process.env.TOKEN?.trim()),
+        },
+        fix: "Aggiungi UPLOAD_API_KEY e TOKEN in .env.local + EnvironmentFile=/home/andrea/fotomatrimonio/.env.local in foto-sito.service, poi npm run build e restart.",
+      },
+      { status: 500 }
+    );
   }
 
   let baseUrl: string;
@@ -103,7 +113,12 @@ function formatTokenMismatchMessage(
     `deve essere identica a TOKEN sul Raspberry che ha valore di: "${raspberryToken}".`;
 
   if (receivedAuthorization) {
-    msg += ` Il server upload ha ricevuto Authorization: "${receivedAuthorization}".`;
+    msg += ` Ricevuto dal server upload: "${receivedAuthorization}".`;
+  }
+
+  if (receivedAuthorization === "(mancante)") {
+    msg +=
+      " L'header Authorization non è arrivato all'upload API: la richiesta NON passa dal proxy Next (controlla nginx — solo proxy_pass :3000, mai :3001 per /api/upload). Apri /api/env-debug";
   }
 
   if (

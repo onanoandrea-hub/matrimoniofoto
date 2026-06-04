@@ -89,6 +89,11 @@ function format401FromBody(body: unknown): string | null {
     msg += ` Ricevuto dal server upload: "${received}".`;
   }
 
+  if (received === "(mancante)") {
+    msg +=
+      " Authorization non arriva all'upload API: nginx deve inoltrare tutto a Next (:3000), non diretto a :3001. Controlla /api/env-debug sul sito.";
+  }
+
   return msg;
 }
 

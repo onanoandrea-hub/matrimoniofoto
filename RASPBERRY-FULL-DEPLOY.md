@@ -79,6 +79,7 @@ Nel sito nginx (443):
 ```nginx
 client_max_body_size 100m;
 
+# IMPORTANTE: tutto il sito (anche /api/upload) va a Next :3000 — NON a :3001
 location / {
     proxy_pass http://127.0.0.1:3000;
     proxy_http_version 1.1;
@@ -205,5 +206,6 @@ Dal browser: `https://matrimonioandreafrancesca.duckdns.org/api/ready` — se no
 | Sintomo | Soluzione |
 |---------|-----------|
 | `Cannot find module .../server.js` | Usa **`npm run start:upload`**, non `node server.js` |
-| 401 token uguale | `EnvironmentFile=.env.local` nei service; TOKEN = UPLOAD_API_KEY |
+| 401 + `receivedAuthorization: (mancante)` | nginx manda `/api/upload` a :3001 invece di :3000, oppure Next senza `.env.local` — vedi `/api/env-debug` |
+| 401 token uguale | `EnvironmentFile=.env.local` in **foto-sito** e **foto-upload**; TOKEN = UPLOAD_API_KEY |
 | 413 | Aumenta `client_max_body_size` in nginx |
