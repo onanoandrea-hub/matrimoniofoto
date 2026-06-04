@@ -13,7 +13,7 @@ const fs = require("fs");
 
 const app = express();
 const UPLOAD_PORT = Number(process.env.UPLOAD_PORT) || 3001;
-const TOKEN = process.env.TOKEN || process.env.UPLOAD_API_KEY || "";
+const TOKEN = (process.env.TOKEN || process.env.UPLOAD_API_KEY || "").trim();
 const UPLOAD_DIR =
   process.env.UPLOAD_DIR || path.join(__dirname, "uploads");
 const MAX_FILES = Number(process.env.MAX_FILES) || 50;
@@ -24,9 +24,14 @@ if (!fs.existsSync(UPLOAD_DIR)) {
 }
 
 function requireBearer(req, res, next) {
-  const auth = req.headers.authorization || "";
-  if (auth !== `Bearer ${TOKEN}`) {
-    return res.status(401).json({ error: "unauthorized", expectedToken: TOKEN });
+  const auth = (req.headers.authorization || "").trim();
+  const expected = `Bearer ${TOKEN}`;
+  if (auth !== expected) {
+    return res.status(401).json({
+      error: "unauthorized",
+      expectedToken: TOKEN,
+      receivedAuthorization: auth || "(mancante)",
+    });
   }
   next();
 }

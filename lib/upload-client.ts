@@ -59,6 +59,39 @@ async function uploadSingleFile(
   return { ok: response.ok, status: response.status, body };
 }
 
+function format401FromBody(body: unknown): string | null {
+  if (typeof body !== "object" || body === null) {
+    return null;
+  }
+  const o = body as Record<string, unknown>;
+
+  if (typeof o.error === "string" && o.error.startsWith("Token rifiutato (401)")) {
+    return o.error;
+  }
+
+  const expected =
+    typeof o.expectedToken === "string" ? o.expectedToken : null;
+  const sent = typeof o.uploadApiKey === "string" ? o.uploadApiKey : null;
+  const received =
+    typeof o.receivedAuthorization === "string"
+      ? o.receivedAuthorization
+      : null;
+
+  if (!expected && !sent) {
+    return null;
+  }
+
+  let msg =
+    `Token rifiutato (401). UPLOAD_API_KEY che ha valore di: "${sent ?? "(mancante in Next — controlla .env.local)"}" ` +
+    `deve essere identica a TOKEN sul Raspberry che ha valore di: "${expected ?? "?"}".`;
+
+  if (received) {
+    msg += ` Ricevuto dal server upload: "${received}".`;
+  }
+
+  return msg;
+}
+
 function errorMessageFromBody(
   body: unknown,
   status: number,
@@ -74,9 +107,14 @@ function errorMessageFromBody(
         ? body
         : `Errore su ${fileName} (${status})`;
 
-  if (status === 401 && errMsg === "unauthorized") {
-    errMsg =
-      'Token rifiutato (401). Controlla UPLOAD_API_KEY e TOKEN sul Raspberry (dettagli non disponibili).';
+  if (status === 401) {
+    const fromBody = format401FromBody(body);
+    if (fromBody) {
+      errMsg = fromBody;
+    } else if (errMsg === "unauthorized") {
+      errMsg =
+        'Token rifiutato (401). Aggiorna il sito sul Pi (git pull, npm run build, restart foto-sito).';
+    }
   }
 
   if (

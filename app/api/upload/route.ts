@@ -62,12 +62,17 @@ export async function POST(request: Request) {
         const piToken =
           typeof data.expectedToken === "string"
             ? data.expectedToken
-            : "(non ricevuto — aggiorna upload-server.js sul Pi e riavvia npm run start:upload)";
+            : "(non ricevuto — riavvia npm run start:upload)";
+        const received =
+          typeof data.receivedAuthorization === "string"
+            ? data.receivedAuthorization
+            : null;
         return Response.json(
           {
-            error: formatTokenMismatchMessage(uploadKey, piToken),
+            error: formatTokenMismatchMessage(uploadKey, piToken, received),
             uploadApiKey: uploadKey,
             expectedToken: piToken,
+            receivedAuthorization: received,
           },
           { status: 401 }
         );
@@ -90,10 +95,26 @@ export async function POST(request: Request) {
 
 function formatTokenMismatchMessage(
   uploadApiKey: string,
-  raspberryToken: string
+  raspberryToken: string,
+  receivedAuthorization: string | null
 ): string {
-  return (
+  let msg =
     `Token rifiutato (401). UPLOAD_API_KEY che ha valore di: "${uploadApiKey}" ` +
-    `deve essere identica a TOKEN sul Raspberry che ha valore di: "${raspberryToken}".`
-  );
+    `deve essere identica a TOKEN sul Raspberry che ha valore di: "${raspberryToken}".`;
+
+  if (receivedAuthorization) {
+    msg += ` Il server upload ha ricevuto Authorization: "${receivedAuthorization}".`;
+  }
+
+  if (
+    uploadApiKey &&
+    raspberryToken &&
+    uploadApiKey === raspberryToken &&
+    receivedAuthorization !== `Bearer ${uploadApiKey}`
+  ) {
+    msg +=
+      " I valori coincidono ma l'header non è corretto: riavvia foto-sito (npm run build) e verifica EnvironmentFile=.env.local nel service systemd.";
+  }
+
+  return msg;
 }
