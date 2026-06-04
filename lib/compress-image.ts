@@ -3,10 +3,6 @@ import { isImageFile, isVideoFile } from "./media-file";
 /** Comprimi solo le foto grandi (risparmio banda). I video passano così. */
 export const PROXY_MAX_FILE_BYTES = Math.floor(3.5 * 1024 * 1024);
 
-function formatMb(bytes: number): string {
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}
-
 async function fileFromCanvas(
   canvas: HTMLCanvasElement,
   name: string,
