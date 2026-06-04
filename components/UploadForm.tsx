@@ -98,9 +98,7 @@ export function UploadForm() {
           Foto e video
         </label>
         <p className="field-hint">
-          Dalla galleria (anche iPhone): foto e video .mov / .mp4. Le foto
-          grandi vengono ridotte; i video fino al limite impostato sul Pi
-          (MAX_FILE_MB).
+          Dalla galleria seleziona le foto e i video da inviare.
         </p>
         <input
           ref={inputRef}
