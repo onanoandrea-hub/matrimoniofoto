@@ -41,4 +41,4 @@ done
 echo "=== Verifica TypeScript ==="
 node -e "require('typescript'); console.log('typescript OK')"
 
-echo "=== Installazione OK. Esegui: npm run build ==="
+echo "=== Installazione OK. Esegui: npm run build:pi ==="

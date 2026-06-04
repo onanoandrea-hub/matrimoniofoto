@@ -25,9 +25,9 @@ export async function GET(_request: Request, { params }: Params) {
   }
 
   const stat = fs.statSync(filePath);
-  const body = fs.readFileSync(filePath);
+  const bytes = new Uint8Array(fs.readFileSync(filePath));
 
-  return new Response(body, {
+  return new Response(bytes, {
     headers: {
       "Content-Type": contentTypeForFile(filePath),
       "Content-Length": String(stat.size),

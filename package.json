@@ -8,7 +8,9 @@
   "scripts": {
     "dev": "next dev",
     "dev:upload": "node upload-server.js",
+    "prebuild": "node scripts/clean-next.cjs",
     "build": "next build",
+    "build:pi": "bash scripts/pi-build.sh",
     "vercel-build": "next build",
     "start": "next start",
     "start:upload": "node upload-server.js",
