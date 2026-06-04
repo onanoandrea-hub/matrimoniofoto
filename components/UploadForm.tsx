@@ -47,7 +47,7 @@ export function UploadForm() {
       const filesToUpload = filesFromInput(inputRef.current);
       if (filesToUpload.length === 0) {
         setStatus("error");
-        setFeedback("Seleziona almeno una foto.");
+        setFeedback("Seleziona almeno una foto o un video.");
         return;
       }
 
@@ -55,7 +55,7 @@ export function UploadForm() {
       setFeedback(null);
       setUploadProgress(
         filesToUpload.length > 1
-          ? `Invio foto 1 di ${filesToUpload.length}…`
+          ? `Invio file 1 di ${filesToUpload.length}…`
           : null
       );
 
@@ -64,7 +64,7 @@ export function UploadForm() {
           files: filesToUpload,
           onProgress: (current, total) => {
             setUploadProgress(
-              total > 1 ? `Invio foto ${current} di ${total}…` : null
+              total > 1 ? `Invio file ${current} di ${total}…` : null
             );
           },
         });
@@ -95,18 +95,19 @@ export function UploadForm() {
     <form className="upload-form" onSubmit={handleSubmit} noValidate>
       <div className="field">
         <label htmlFor="photos" className="field-label">
-          Le tue foto
+          Foto e video
         </label>
         <p className="field-hint">
-          Puoi selezionare più immagini dalla galleria del telefono. Le foto
-          grandi vengono ridotte automaticamente per l’invio.
+          Dalla galleria (anche iPhone): foto e video .mov / .mp4. Le foto
+          grandi vengono ridotte; i video fino al limite impostato sul Pi
+          (MAX_FILE_MB).
         </p>
         <input
           ref={inputRef}
           id="photos"
           name="photos"
           type="file"
-          accept="image/*"
+          accept="image/*,video/*,video/quicktime,video/mp4"
           multiple
           className="file-input"
           onChange={onFilesChange}
@@ -149,7 +150,7 @@ export function UploadForm() {
         disabled={!canSubmit}
         aria-busy={isUploading}
       >
-        {isUploading ? "Caricamento in corso…" : "Invia foto"}
+        {isUploading ? "Caricamento in corso…" : "Invia"}
       </button>
 
       <div className="status" role="status" aria-live="polite">
@@ -157,7 +158,7 @@ export function UploadForm() {
           <p className="status-uploading">
             <span className="spinner" aria-hidden="true" />
             {uploadProgress ??
-              "Stiamo inviando le tue foto, attendi qualche secondo."}
+              "Stiamo inviando i tuoi file, attendi qualche secondo."}
           </p>
         )}
         {status === "success" && feedback && (

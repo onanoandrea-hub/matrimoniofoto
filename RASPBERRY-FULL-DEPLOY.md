@@ -36,7 +36,7 @@ UPLOAD_API_KEY=cambia-questo-token
 TOKEN=cambia-questo-token
 UPLOAD_PORT=3001
 UPLOAD_DIR=/home/andrea/fotomatrimonio/uploads
-MAX_FILE_MB=25
+MAX_FILE_MB=100
 ```
 
 `UPLOAD_API_KEY` e `TOKEN` devono essere **identici**.

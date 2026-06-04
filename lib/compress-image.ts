@@ -1,7 +1,6 @@
-/**
- * Vercel Functions: body request max ~4.5 MB (non aumentabile).
- * Il proxy /api/upload inoltra il file → serve margine per multipart.
- */
+import { isImageFile, isVideoFile } from "./media-file";
+
+/** Comprimi solo le foto grandi (risparmio banda). I video passano così. */
 export const PROXY_MAX_FILE_BYTES = Math.floor(3.5 * 1024 * 1024);
 
 function formatMb(bytes: number): string {
@@ -77,14 +76,16 @@ async function compressImageFile(
 }
 
 export async function prepareFileForProxyUpload(file: File): Promise<File> {
+  if (isVideoFile(file)) {
+    return file;
+  }
+
   if (file.size <= PROXY_MAX_FILE_BYTES) {
     return file;
   }
 
-  if (!file.type.startsWith("image/")) {
-    throw new Error(
-      `${file.name} è troppo grande (${formatMb(file.size)}). Su Vercel il massimo è circa 3,5 MB per foto.`
-    );
+  if (!isImageFile(file)) {
+    return file;
   }
 
   const compressed = await compressImageFile(file, PROXY_MAX_FILE_BYTES);

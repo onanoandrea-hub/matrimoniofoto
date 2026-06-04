@@ -54,7 +54,11 @@ function requireBearer(req, res, next) {
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
   filename: (_req, file, cb) => {
-    const safe = (file.originalname || "foto.jpg").replace(/[^\w.\-]+/g, "_");
+    const fallback =
+      file.mimetype && file.mimetype.startsWith("video/")
+        ? "video.mov"
+        : "foto.jpg";
+    const safe = (file.originalname || fallback).replace(/[^\w.\-]+/g, "_");
     cb(null, `${Date.now()}-${safe}`);
   },
 });
@@ -130,8 +134,8 @@ app.post("/upload", requireBearer, uploadMany, (req, res) => {
     files: saved,
     messageText:
       saved.length === 1
-        ? "1 foto caricata con successo."
-        : `${saved.length} foto caricate con successo.`,
+        ? "1 file caricato con successo."
+        : `${saved.length} file caricati con successo.`,
   });
 });
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { prepareFileForProxyUpload } from "./compress-image";
+import { isVideoFile } from "./media-file";
 import { UPLOAD_FILE_FIELD } from "./upload-field";
 
 export type UploadStatus = "idle" | "uploading" | "success" | "error";
@@ -19,21 +20,18 @@ type UploadOptions = {
 };
 
 function uniqueUploadFilename(file: File, index: number): string {
-  const safe = file.name.replace(/[^\w.\-]+/g, "_") || "foto.jpg";
+  const fallback = isVideoFile(file) ? "video.mov" : "foto.jpg";
+  const safe = file.name.replace(/[^\w.\-]+/g, "_") || fallback;
   return `${Date.now()}-${index}-${safe}`;
 }
 
-/** Copia i file in memoria (fix Safari/iOS: il FileList può “svuotarsi” dopo il primo invio). */
-async function cloneFilesForUpload(files: File[]): Promise<File[]> {
-  return Promise.all(
-    files.map(async (file, index) => {
-      const buffer = await file.arrayBuffer();
-      return new File([buffer], uniqueUploadFilename(file, index), {
-        type: file.type || "image/jpeg",
-        lastModified: file.lastModified,
-      });
-    })
-  );
+async function cloneFileForUpload(file: File, index: number): Promise<File> {
+  const buffer = await file.arrayBuffer();
+  const defaultType = isVideoFile(file) ? "video/quicktime" : "image/jpeg";
+  return new File([buffer], uniqueUploadFilename(file, index), {
+    type: file.type || defaultType,
+    lastModified: file.lastModified,
+  });
 }
 
 async function uploadSingleFile(
@@ -91,7 +89,7 @@ function format401FromBody(body: unknown): string | null {
 
   if (received === "(mancante)") {
     msg +=
-      " Authorization non arriva all'upload API: nginx deve inoltrare tutto a Next (:3000), non diretto a :3001. Controlla /api/env-debug sul sito.";
+      " Authorization non arriva all'upload API: nginx deve inoltrare tutto a Next (:3000). Controlla /api/env-debug.";
   }
 
   return msg;
@@ -118,8 +116,13 @@ function errorMessageFromBody(
       errMsg = fromBody;
     } else if (errMsg === "unauthorized") {
       errMsg =
-        'Token rifiutato (401). Aggiorna il sito sul Pi (git pull, npm run build, restart foto-sito).';
+        "Token rifiutato (401). Riavvia foto-sito e foto-upload sul Pi.";
     }
+  }
+
+  if (errMsg === "file_too_large") {
+    errMsg =
+      `${fileName} troppo grande. Aumenta MAX_FILE_MB in .env.local sul Pi (es. 100) e client_max_body_size in nginx.`;
   }
 
   if (
@@ -127,7 +130,7 @@ function errorMessageFromBody(
     /payload_too_large|entity too large/i.test(errMsg)
   ) {
     errMsg =
-      "Foto troppo pesante per il server Vercel (max ~4,5 MB). Riprova: le immagini vengono compresse automaticamente; se persiste, usa foto più piccole.";
+      "File troppo pesante per nginx. Aumenta client_max_body_size nel sito nginx.";
   }
 
   if (
@@ -136,7 +139,7 @@ function errorMessageFromBody(
     /bad gateway/i.test(body)
   ) {
     errMsg =
-      "502 Bad Gateway: nginx non raggiunge Next (porta 3000). Sul Pi: sudo systemctl status foto-sito foto-upload — poi npm run build e restart. Apri /api/ready";
+      "502 Bad Gateway: Next non risponde. Controlla systemctl status foto-sito foto-upload.";
   }
 
   return errMsg;
@@ -146,11 +149,10 @@ export async function uploadPhotos(params: UploadOptions): Promise<UploadResult>
   const { files, onProgress } = params;
 
   if (files.length === 0) {
-    return { ok: false, message: "Seleziona almeno una foto." };
+    return { ok: false, message: "Seleziona almeno una foto o un video." };
   }
 
-  const cloned = await cloneFilesForUpload(files);
-  const total = cloned.length;
+  const total = files.length;
   let uploaded = 0;
 
   for (let i = 0; i < total; i++) {
@@ -162,14 +164,15 @@ export async function uploadPhotos(params: UploadOptions): Promise<UploadResult>
 
     let fileToSend: File;
     try {
-      fileToSend = await prepareFileForProxyUpload(cloned[i]);
+      const cloned = await cloneFileForUpload(files[i], i);
+      fileToSend = await prepareFileForProxyUpload(cloned);
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
-          : "Impossibile preparare la foto per l'invio.";
+          : "Impossibile preparare il file per l'invio.";
       const partial =
-        uploaded > 0 ? ` (${uploaded} di ${total} già inviate)` : "";
+        uploaded > 0 ? ` (${uploaded} di ${total} già inviati)` : "";
       return { ok: false, message: `${message}${partial}` };
     }
 
@@ -179,10 +182,10 @@ export async function uploadPhotos(params: UploadOptions): Promise<UploadResult>
       const errMsg = errorMessageFromBody(
         result.body,
         result.status,
-        files[i]?.name ?? `foto ${i + 1}`
+        files[i]?.name ?? `file ${i + 1}`
       );
       const partial =
-        uploaded > 0 ? ` (${uploaded} di ${total} già inviate)` : "";
+        uploaded > 0 ? ` (${uploaded} di ${total} già inviati)` : "";
       return {
         ok: false,
         message: `${errMsg}${partial}`,
@@ -194,6 +197,6 @@ export async function uploadPhotos(params: UploadOptions): Promise<UploadResult>
 
   return {
     ok: true,
-    message: `Grazie! ${total} ${total === 1 ? "foto caricata" : "foto caricate"} con successo.`,
+    message: `Grazie! ${total} ${total === 1 ? "file caricato" : "file caricati"} con successo.`,
   };
 }
