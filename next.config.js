@@ -7,6 +7,9 @@ require("dotenv").config({ path: path.join(__dirname, ".env") });
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Sul Raspberry npm a volte non installa tutte le dipendenze ESLint
+  eslint: { ignoreDuringBuilds: true },
+  typescript: { ignoreBuildErrors: false },
   webpack: (config) => {
     config.resolve.alias = {
       ...(config.resolve.alias || {}),

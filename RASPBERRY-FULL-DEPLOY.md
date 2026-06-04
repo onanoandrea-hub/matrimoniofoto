@@ -164,10 +164,22 @@ Log: `journalctl -u foto-upload -f` / `journalctl -u foto-sito -f`
 ```bash
 cd ~/fotomatrimonio
 git pull
+rm -rf node_modules .next
 npm install
 npm run build
 sudo systemctl restart foto-upload foto-sito
 ```
+
+### Build fallisce su Raspberry (ESLint / `Cannot find name 'Object'`)
+
+```bash
+cd ~/fotomatrimonio
+rm -rf node_modules .next
+npm install
+npm run build
+```
+
+Il progetto salta ESLint in build (`next.config.js`). Se persiste: `node -v` deve essere **≥ 20**.
 
 ---
 
