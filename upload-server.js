@@ -23,7 +23,22 @@ if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
+function isLocalRequest(req) {
+  const ip = req.socket.remoteAddress || "";
+  return (
+    ip === "127.0.0.1" ||
+    ip === "::1" ||
+    ip === "::ffff:127.0.0.1" ||
+    ip.endsWith("127.0.0.1")
+  );
+}
+
+/** Richieste da localhost (proxy Next su :3000 → :3001) non richiedono Bearer. */
 function requireBearer(req, res, next) {
+  if (isLocalRequest(req)) {
+    return next();
+  }
+
   const auth = (req.headers.authorization || "").trim();
   const expected = `Bearer ${TOKEN}`;
   if (auth !== expected) {
@@ -134,7 +149,7 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: "server_error" });
 });
 
-app.listen(UPLOAD_PORT, () => {
-  console.log(`Upload API http://127.0.0.1:${UPLOAD_PORT}`);
+app.listen(UPLOAD_PORT, "127.0.0.1", () => {
+  console.log(`Upload API http://127.0.0.1:${UPLOAD_PORT} (solo locale)`);
   console.log(`Cartella upload: ${UPLOAD_DIR}`);
 });

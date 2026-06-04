@@ -7,7 +7,9 @@ Tutto il progetto vive in **un’unica directory**. Due processi Node dalla stes
 | `npm run start:upload` | API upload (`upload-server.js`) | **3001** |
 | `npm run build` + `npm run start` | Sito Next.js | **3000** |
 
-nginx (HTTPS) inoltra il traffico solo a Next (:3000). Next parla con l’upload API su **127.0.0.1:3001** (nessun problema nginx / Authorization).
+nginx (HTTPS) inoltra il traffico a Next (:3000). Next parla con l’upload API su **127.0.0.1:3001**.
+
+L’upload API accetta richieste **da localhost senza Bearer** (il proxy Next è sulla stessa macchina). Il token serve solo per chiamate esterne dirette alla porta 3001 (che è in ascolto solo su 127.0.0.1).
 
 ---
 
@@ -206,6 +208,6 @@ Dal browser: `https://matrimonioandreafrancesca.duckdns.org/api/ready` — se no
 | Sintomo | Soluzione |
 |---------|-----------|
 | `Cannot find module .../server.js` | Usa **`npm run start:upload`**, non `node server.js` |
-| 401 + `receivedAuthorization: (mancante)` | nginx manda `/api/upload` a :3001 invece di :3000, oppure Next senza `.env.local` — vedi `/api/env-debug` |
+| 401 + `receivedAuthorization: (mancante)` | Aggiorna `upload-server.js` (trust localhost) e riavvia `foto-upload` — oppure nginx/Next senza `.env.local` |
 | 401 token uguale | `EnvironmentFile=.env.local` in **foto-sito** e **foto-upload**; TOKEN = UPLOAD_API_KEY |
 | 413 | Aumenta `client_max_body_size` in nginx |
