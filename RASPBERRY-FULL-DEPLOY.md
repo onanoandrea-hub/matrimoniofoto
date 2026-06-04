@@ -19,8 +19,11 @@ L’upload API accetta richieste **da localhost senza Bearer** (il proxy Next è
 mkdir -p ~/fotomatrimonio
 cd ~/fotomatrimonio
 git clone https://github.com/onanoandrea-hub/matrimoniofoto.git .
-npm install
+bash scripts/pi-install.sh
+npm run build
 ```
+
+> **Nota:** il progetto **non include ESLint** (troppi pacchetti per la SD del Pi). Usa `bash scripts/pi-install.sh` invece di un semplice `npm install` dopo errori `TAR_ENTRY_ERROR`.
 
 Copia le variabili:
 
@@ -198,25 +201,39 @@ Controlla spazio: `df -h ~` (servono **~1–2 GB** liberi).
 
 Il progetto salta ESLint in build (`next.config.js`). `node -v` deve essere **≥ 20**.
 
-### Alternativa: build sul PC, solo deploy sul Pi
+### `npm warn tar TAR_ENTRY_ERROR` / `Cannot find name 'Object'`
 
-Se il Pi è lento o `npm install` non va:
-
-1. Sul **PC**: `npm install && npm run build`
-2. Copia sul Pi la cartella `.next` e `node_modules` (o rifai `npm install --omit=dev` sul Pi dopo aver copiato solo `.next`)
-
-Sul Pi minimo:
+Di solito **`node_modules` corrotto** (SD lenta, install interrotta, due `npm` in parallelo).
 
 ```bash
 cd ~/fotomatrimonio
 git pull
-# dopo aver copiato .next dal PC:
-npm install --omit=dev --legacy-peer-deps
-npm run start:upload   # in foto-upload.service
-npm run start          # in foto-sito.service
+bash scripts/pi-install.sh
+npm run build
+sudo systemctl restart foto-upload foto-sito
+```
+
+Se dopo `pi-install` il build fallisce ancora, usa la **build sul PC** (sotto).
+
+### Alternativa: build sul PC, solo deploy sul Pi
+
+Se il Pi è lento o `npm install` non va:
+
+1. Sul **PC** (Windows): `npm install && npm run build`
+2. Copia sul Pi solo **`.next`** (es. `scp -r .next andrea@raspberry:~/fotomatrimonio/`)
+
+Sul Pi:
+
+```bash
+cd ~/fotomatrimonio
+git pull
+bash scripts/pi-install.sh   # oppure: npm install --legacy-peer-deps
+# se hai copiato .next dal PC, salta npm run build
+sudo systemctl restart foto-upload foto-sito
 ```
 
 ---
+
 
 ## 6. Errore **502 Bad Gateway** (HTML nginx)
 
@@ -238,7 +255,7 @@ bash scripts/check-pi.sh
 ```bash
 cd ~/fotomatrimonio
 git pull
-npm install
+bash scripts/pi-install.sh
 npm run build
 sudo systemctl restart foto-upload foto-sito
 sudo systemctl status foto-sito foto-upload

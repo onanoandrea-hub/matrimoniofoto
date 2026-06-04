@@ -1,6 +1,7 @@
 #!/bin/bash
-# Installazione pulita su Raspberry — esegui dalla root del repo:
+# Installazione pulita su Raspberry — dalla root del repo:
 #   bash scripts/pi-install.sh
+#   npm run build
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -8,6 +9,9 @@ cd "$ROOT"
 
 echo "=== Spazio disco ==="
 df -h "$ROOT" | tail -1
+
+echo "=== Ferma servizi (evita file in uso) ==="
+sudo systemctl stop foto-sito foto-upload 2>/dev/null || true
 
 echo "=== Rimuovo node_modules e .next ==="
 if [ -d node_modules ]; then
@@ -23,12 +27,18 @@ echo "=== Node ==="
 node -v
 npm -v
 
-echo "=== npm install (può richiedere alcuni minuti sul Pi) ==="
+echo "=== npm install (solo runtime + TypeScript, niente ESLint) ==="
+export NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=768}"
 npm install --no-audit --no-fund --legacy-peer-deps
 
-if [ ! -x node_modules/.bin/next ]; then
-  echo "ERRORE: next non installato. Controlla spazio disco e riprova."
-  exit 1
-fi
+for f in node_modules/.bin/next node_modules/typescript/lib/typescript.js; do
+  if [ ! -e "$f" ]; then
+    echo "ERRORE: manca $f — installazione incompleta (spazio disco / SD card?)."
+    exit 1
+  fi
+done
 
-echo "=== OK. Ora: npm run build ==="
+echo "=== Verifica TypeScript ==="
+node -e "require('typescript'); console.log('typescript OK')"
+
+echo "=== Installazione OK. Esegui: npm run build ==="
