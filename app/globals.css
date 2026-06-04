@@ -282,3 +282,142 @@ body {
   font-size: 0.75rem;
   color: var(--text-muted);
 }
+
+.page--gallery {
+  padding-bottom: 2rem;
+}
+
+.card--wide {
+  max-width: 56rem;
+}
+
+.gallery-login {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.gallery-title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 400;
+}
+
+.gallery-lead {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.gallery-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.gallery-meta,
+.gallery-empty,
+.gallery-status {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.gallery-logout {
+  margin-top: 0;
+  flex-shrink: 0;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gallery-thumb {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg);
+  cursor: pointer;
+  text-align: left;
+}
+
+.gallery-thumb img,
+.gallery-thumb video {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+  background: #e7e0d8;
+}
+
+.gallery-thumb-label {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+.gallery-refresh {
+  margin-top: 1rem;
+}
+
+.gallery-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(28, 25, 23, 0.85);
+}
+
+.gallery-lightbox-inner {
+  position: relative;
+  max-width: min(100%, 900px);
+  max-height: 90dvh;
+}
+
+.gallery-lightbox-inner img,
+.gallery-lightbox-inner video {
+  max-width: 100%;
+  max-height: 80dvh;
+  width: auto;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  border-radius: 8px;
+}
+
+.gallery-lightbox-close {
+  position: absolute;
+  top: -2.5rem;
+  right: 0;
+  border: none;
+  background: none;
+  color: #fff;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+}
+
+.gallery-lightbox-caption {
+  margin: 0.5rem 0 0;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: #e7e0d8;
+  word-break: break-all;
+}

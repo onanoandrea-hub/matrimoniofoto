@@ -267,7 +267,20 @@ Dal browser: `https://matrimonioandreafrancesca.duckdns.org/api/ready` — se no
 
 ---
 
-## 7. Altri problemi
+## 7. Galleria foto (solo Pi)
+
+Pagina **non linkata** dalla home: `https://matrimonioandreafrancesca.duckdns.org/album`
+
+- Utente predefinito: **admin**
+- Password predefinita: **C@gl1@r1** (in `lib/gallery-auth.ts`, modificabile con `GALLERY_USER` / `GALLERY_PASSWORD` in `.env.local`)
+- Legge i file da `UPLOAD_DIR` (stessa cartella dell’upload API)
+- Su **Vercel** la galleria risponde 404 (solo server locale)
+
+Dopo il deploy: `git pull`, `npm run build:pi`, `sudo systemctl restart foto-sito`.
+
+---
+
+## 8. Altri problemi
 
 | Sintomo | Soluzione |
 |---------|-----------|
