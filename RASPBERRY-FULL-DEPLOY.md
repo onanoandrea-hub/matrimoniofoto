@@ -111,6 +111,7 @@ Type=simple
 User=andrea
 WorkingDirectory=/home/andrea/fotomatrimonio
 Environment=NODE_ENV=production
+EnvironmentFile=/home/andrea/fotomatrimonio/.env.local
 ExecStart=/usr/bin/npm run start:upload
 Restart=on-failure
 RestartSec=5
@@ -120,6 +121,8 @@ WantedBy=multi-user.target
 ```
 
 ### Sito Next — `/etc/systemd/system/foto-sito.service`
+
+**Prima del primo avvio:** `cd /home/andrea/fotomatrimonio && npm run build`
 
 ```ini
 [Unit]
@@ -133,6 +136,7 @@ User=andrea
 WorkingDirectory=/home/andrea/fotomatrimonio
 Environment=NODE_ENV=production
 Environment=PORT=3000
+EnvironmentFile=/home/andrea/fotomatrimonio/.env.local
 ExecStart=/usr/bin/npm run start
 Restart=on-failure
 RestartSec=10
@@ -164,13 +168,42 @@ sudo systemctl restart foto-upload foto-sito
 
 ---
 
-## 6. Problemi frequenti
+## 6. Errore **502 Bad Gateway** (HTML nginx)
+
+nginx non riceve risposta da **Next sulla porta 3000** (non è un errore del token).
+
+```bash
+cd ~/fotomatrimonio
+bash scripts/check-pi.sh
+```
+
+| Controllo | Comando atteso |
+|-----------|----------------|
+| Upload API | `curl http://127.0.0.1:3001/health` → `{"ok":true,...}` |
+| Sito Next | `curl -I http://127.0.0.1:3000/` → HTTP 200 |
+| Proxy | `curl http://127.0.0.1:3000/api/ready` → `"ok":true` |
+
+**Riparazione tipica:**
+
+```bash
+cd ~/fotomatrimonio
+git pull
+npm install
+npm run build
+sudo systemctl restart foto-upload foto-sito
+sudo systemctl status foto-sito foto-upload
+```
+
+Se `foto-sito` è **failed**: `journalctl -u foto-sito -n 30` — spesso manca `npm run build` o `.env.local`.
+
+Dal browser: `https://matrimonioandreafrancesca.duckdns.org/api/ready` — se non risponde JSON, Next è giù.
+
+---
+
+## 7. Altri problemi
 
 | Sintomo | Soluzione |
 |---------|-----------|
 | `Cannot find module .../server.js` | Usa **`npm run start:upload`**, non `node server.js` |
-| 502 Bad Gateway | `systemctl status foto-sito foto-upload` — Next o upload non in esecuzione |
-| 401 token uguale | Riavvia entrambi i servizi; controlla `.env.local` (TOKEN = UPLOAD_API_KEY) |
+| 401 token uguale | `EnvironmentFile=.env.local` nei service; TOKEN = UPLOAD_API_KEY |
 | 413 | Aumenta `client_max_body_size` in nginx |
-
-Diagnostica: `https://tuodominio/api/config-status` e `http://localhost:3000/api/auth-check` (solo dev).

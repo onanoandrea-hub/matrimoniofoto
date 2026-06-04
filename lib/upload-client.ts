@@ -87,6 +87,15 @@ function errorMessageFromBody(
       "Foto troppo pesante per il server Vercel (max ~4,5 MB). Riprova: le immagini vengono compresse automaticamente; se persiste, usa foto più piccole.";
   }
 
+  if (
+    status === 502 &&
+    typeof body === "string" &&
+    /bad gateway/i.test(body)
+  ) {
+    errMsg =
+      "502 Bad Gateway: nginx non raggiunge Next (porta 3000). Sul Pi: sudo systemctl status foto-sito foto-upload — poi npm run build e restart. Apri /api/ready";
+  }
+
   return errMsg;
 }
 
