@@ -12,6 +12,7 @@
     "vercel-build": "next build",
     "start": "next start",
     "start:upload": "node upload-server.js",
+    "pi:install": "bash scripts/pi-install.sh",
     "lint": "next lint"
   },
   "dependencies": {

@@ -170,16 +170,51 @@ npm run build
 sudo systemctl restart foto-upload foto-sito
 ```
 
-### Build fallisce su Raspberry (ESLint / `Cannot find name 'Object'`)
+### `npm install` fallisce (ENOTEMPTY / `next: not found`)
+
+`node_modules` è rimasto **a metà**. Non usare solo `rm -rf` se dà errore — usa:
 
 ```bash
 cd ~/fotomatrimonio
-rm -rf node_modules .next
-npm install
+git pull
+bash scripts/pi-install.sh
+npm run build
+sudo systemctl restart foto-sito foto-upload
+```
+
+Oppure:
+
+```bash
+cd ~/fotomatrimonio
+sudo rm -rf node_modules .next
+npm cache clean --force
+npm install --legacy-peer-deps --no-audit
 npm run build
 ```
 
-Il progetto salta ESLint in build (`next.config.js`). Se persiste: `node -v` deve essere **≥ 20**.
+Controlla spazio: `df -h ~` (servono **~1–2 GB** liberi).
+
+### Build fallisce (ESLint / TypeScript)
+
+Il progetto salta ESLint in build (`next.config.js`). `node -v` deve essere **≥ 20**.
+
+### Alternativa: build sul PC, solo deploy sul Pi
+
+Se il Pi è lento o `npm install` non va:
+
+1. Sul **PC**: `npm install && npm run build`
+2. Copia sul Pi la cartella `.next` e `node_modules` (o rifai `npm install --omit=dev` sul Pi dopo aver copiato solo `.next`)
+
+Sul Pi minimo:
+
+```bash
+cd ~/fotomatrimonio
+git pull
+# dopo aver copiato .next dal PC:
+npm install --omit=dev --legacy-peer-deps
+npm run start:upload   # in foto-upload.service
+npm run start          # in foto-sito.service
+```
 
 ---
 
