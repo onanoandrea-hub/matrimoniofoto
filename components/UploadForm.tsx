@@ -105,7 +105,7 @@ export function UploadForm() {
           id="photos"
           name="photos"
           type="file"
-          accept="image/*,video/*,video/quicktime,video/mp4"
+          accept="image/*,.heic,.heif,video/*,video/quicktime,video/mp4"
           multiple
           className="file-input"
           onChange={onFilesChange}

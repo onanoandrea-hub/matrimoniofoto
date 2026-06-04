@@ -1,7 +1,10 @@
-import { isImageFile, isVideoFile } from "./media-file";
+import { isHeicFile, isImageFile, isVideoFile } from "./media-file";
 
 /** Comprimi solo le foto grandi (risparmio banda). I video passano così. */
 export const PROXY_MAX_FILE_BYTES = Math.floor(3.5 * 1024 * 1024);
+
+/** HEIC: il browser non può decodificarlo per canvas — invio originale (allinea a MAX_FILE_MB sul Pi). */
+export const HEIC_RAW_MAX_BYTES = 100 * 1024 * 1024;
 
 async function fileFromCanvas(
   canvas: HTMLCanvasElement,
@@ -42,13 +45,36 @@ async function renderToFile(
   return fileFromCanvas(canvas, name, quality);
 }
 
+function heicTooLargeMessage(file: File): string {
+  const mb = Math.ceil(file.size / (1024 * 1024));
+  return (
+    `${file.name} (HEIC, ${mb} MB): il browser non può comprimerla. ` +
+    `Invio il file originale solo se è sotto ${Math.floor(HEIC_RAW_MAX_BYTES / (1024 * 1024))} MB ` +
+    `(MAX_FILE_MB sul Raspberry). Altrimenti in Fotocamera usa «Formati più compatibili» (JPEG).`
+  );
+}
+
 async function compressImageFile(
   file: File,
   maxBytes: number
 ): Promise<File> {
   let bitmap: ImageBitmap | null = null;
   try {
-    bitmap = await createImageBitmap(file);
+    try {
+      bitmap = await createImageBitmap(file);
+    } catch {
+      if (isHeicFile(file) && file.size <= HEIC_RAW_MAX_BYTES) {
+        return file;
+      }
+      if (file.size <= maxBytes) {
+        return file;
+      }
+      throw new Error(
+        isHeicFile(file)
+          ? heicTooLargeMessage(file)
+          : `Impossibile elaborare ${file.name}. Prova JPEG o un’altra foto.`
+      );
+    }
     const qualities = [0.88, 0.8, 0.72, 0.64, 0.56, 0.48];
     const maxSides = [2560, 2048, 1920, 1600, 1280, 1024, 800];
 
@@ -73,6 +99,13 @@ async function compressImageFile(
 
 export async function prepareFileForProxyUpload(file: File): Promise<File> {
   if (isVideoFile(file)) {
+    return file;
+  }
+
+  if (isHeicFile(file)) {
+    if (file.size > HEIC_RAW_MAX_BYTES) {
+      throw new Error(heicTooLargeMessage(file));
+    }
     return file;
   }
 
