@@ -273,7 +273,7 @@ Pagina **non linkata** dalla home: `https://matrimonioandreafrancesca.duckdns.or
 
 - Utente predefinito: **admin**
 - Password predefinita: **C@gl1@r1** (in `lib/gallery-auth.ts`, modificabile con `GALLERY_USER` / `GALLERY_PASSWORD` in `.env.local`)
-- Legge i file da `UPLOAD_DIR` (stessa cartella dell’upload API)
+- Legge ed **elimina** i file in `UPLOAD_DIR` (stessa cartella dell’upload API; serve la sessione admin)
 - Su **Vercel** la galleria risponde 404 (solo server locale)
 
 Dopo il deploy: `git pull`, `npm run build:pi`, `sudo systemctl restart foto-sito`.

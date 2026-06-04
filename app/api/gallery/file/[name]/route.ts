@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import {
   contentTypeForFile,
+  deleteGalleryFile,
   mediaKind,
   resolveUploadFilePath,
 } from "@/lib/gallery-files";
@@ -34,4 +35,19 @@ export async function GET(_request: Request, { params }: Params) {
       "Cache-Control": "private, max-age=3600",
     },
   });
+}
+
+export async function DELETE(_request: Request, { params }: Params) {
+  const denied = await requireGallerySession();
+  if (denied) {
+    return denied;
+  }
+
+  const { name } = await params;
+  const decoded = decodeURIComponent(name);
+  if (!deleteGalleryFile(decoded)) {
+    return Response.json({ error: "not_found" }, { status: 404 });
+  }
+
+  return Response.json({ ok: true, deleted: path.basename(decoded) });
 }

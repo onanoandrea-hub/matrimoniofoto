@@ -86,6 +86,23 @@ export function listGalleryFiles(): GalleryFileEntry[] {
   return entries;
 }
 
+export function deleteGalleryFile(filename: string): boolean {
+  const safe = safeUploadFilename(filename);
+  if (!safe || mediaKind(safe) === "other") {
+    return false;
+  }
+  const full = path.join(getUploadDir(), safe);
+  if (!fs.existsSync(full)) {
+    return false;
+  }
+  const stat = fs.statSync(full);
+  if (!stat.isFile()) {
+    return false;
+  }
+  fs.unlinkSync(full);
+  return true;
+}
+
 export function resolveUploadFilePath(filename: string): string | null {
   const safe = safeUploadFilename(filename);
   if (!safe) {

@@ -340,6 +340,33 @@ body {
   list-style: none;
 }
 
+.gallery-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.gallery-delete {
+  padding: 0.35rem 0.5rem;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--error);
+  background: var(--error-bg);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.gallery-delete:hover:not(:disabled) {
+  border-color: var(--error);
+}
+
+.gallery-delete:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 .gallery-thumb {
   display: flex;
   flex-direction: column;
@@ -420,4 +447,27 @@ body {
   font-size: 0.8125rem;
   color: #e7e0d8;
   word-break: break-all;
+}
+
+.gallery-lightbox-delete {
+  display: block;
+  margin: 1rem auto 0;
+  padding: 0.5rem 1rem;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--error);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.gallery-lightbox-delete:hover:not(:disabled) {
+  filter: brightness(0.92);
+}
+
+.gallery-lightbox-delete:disabled {
+  opacity: 0.7;
+  cursor: wait;
 }

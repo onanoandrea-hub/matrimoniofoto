@@ -47,6 +47,7 @@ export function GalleryView() {
   const [files, setFiles] = useState<GalleryFile[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState<GalleryFile | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   const loadFiles = useCallback(async () => {
     setLoadError(null);
@@ -94,6 +95,40 @@ export function GalleryView() {
     }
     setPassword("");
     await loadFiles();
+  };
+
+  const deleteFile = async (file: GalleryFile) => {
+    const ok = window.confirm(
+      `Eliminare definitivamente "${file.name}" dal server?`
+    );
+    if (!ok) {
+      return;
+    }
+
+    setDeleting(file.name);
+    setLoadError(null);
+    try {
+      const res = await fetch(fileUrl(file.name), {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (res.status === 401) {
+        setView("login");
+        return;
+      }
+      if (!res.ok) {
+        setLoadError("Impossibile eliminare il file.");
+        return;
+      }
+      if (lightbox?.name === file.name) {
+        setLightbox(null);
+      }
+      setFiles((prev) => prev.filter((f) => f.name !== file.name));
+    } catch {
+      setLoadError("Errore di rete durante l'eliminazione.");
+    } finally {
+      setDeleting(null);
+    }
   };
 
   const onLogout = async () => {
@@ -180,7 +215,7 @@ export function GalleryView() {
       ) : (
         <ul className="gallery-grid">
           {files.map((file) => (
-            <li key={file.name}>
+            <li key={file.name} className="gallery-item">
               <button
                 type="button"
                 className="gallery-thumb"
@@ -200,6 +235,18 @@ export function GalleryView() {
                 <span className="gallery-thumb-label">
                   {formatDate(file.mtime)} · {formatSize(file.size)}
                 </span>
+              </button>
+              <button
+                type="button"
+                className="gallery-delete"
+                disabled={deleting === file.name}
+                aria-label={`Elimina ${file.name}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  void deleteFile(file);
+                }}
+              >
+                {deleting === file.name ? "…" : "Elimina"}
               </button>
             </li>
           ))}
@@ -243,6 +290,16 @@ export function GalleryView() {
             <p className="gallery-lightbox-caption">
               {lightbox.name} · {formatSize(lightbox.size)}
             </p>
+            <button
+              type="button"
+              className="gallery-lightbox-delete"
+              disabled={deleting === lightbox.name}
+              onClick={() => void deleteFile(lightbox)}
+            >
+              {deleting === lightbox.name
+                ? "Eliminazione…"
+                : "Elimina dal server"}
+            </button>
           </div>
         </div>
       ) : null}
